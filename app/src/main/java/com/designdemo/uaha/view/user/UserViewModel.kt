@@ -30,17 +30,15 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
 
-class UserViewModel(application: Application) : AndroidViewModel(application) {
+class UserViewModel(private val repository: UserRepository,
+                    private val scope: CoroutineScope,
+                    private val parentJob: Job) : ViewModel() {
+
     companion object {
         private const val TAG = "UserViewModel"
     }
 
-    private var parentJob = Job()
-    private val couroutineContext
-        get() = parentJob + Dispatchers.Main
-    private val scope = CoroutineScope(couroutineContext)
 
-    private val repository: UserRepository
     val allUserEntity: LiveData<List<UserEntity>>
 
     internal val outputWorkInfos: LiveData<List<WorkInfo>>
@@ -48,8 +46,6 @@ class UserViewModel(application: Application) : AndroidViewModel(application) {
     private val workManager: WorkManager = WorkManager.getInstance()
 
     init {
-        val userInfoDao = InfoDatabase.getDatabase(application, scope).userDao()
-        repository = UserRepository(userInfoDao)
         allUserEntity = repository.allUserEntity
         outputWorkInfos = workManager.getWorkInfosByTagLiveData(TAG_WORK_NOTIF)
     }
@@ -148,7 +144,14 @@ class UserViewModel(application: Application) : AndroidViewModel(application) {
 }
 
 class UserViewModelProvider(private val application: Application ) : ViewModelProvider.Factory {
+
+    private val parentJob: Job = Job()
+    private val couroutineContext = parentJob + Dispatchers.Main
+    private val scope: CoroutineScope = CoroutineScope(couroutineContext)
+    private val userInfoDao = InfoDatabase.getDatabase(application, scope).userDao()
+    private val repository = UserRepository(userInfoDao)
+
     override fun <T : ViewModel?> create(modelClass: Class<T>): T {
-        return UserViewModel(application) as T
+        return UserViewModel(repository, scope, parentJob) as T
     }
 }

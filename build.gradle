@@ -34,7 +34,7 @@ allprojects {
 
 ext {
     appcompat = '1.1.0-rc01'
-    archComponentsVersion = '2.2.0-alpha02'
+    archComponentsVersion = '2.2.0'
     corektx = '1.2.0-alpha02'
     coroutines = '1.1.0'
     glide = '4.9.0'
@@ -44,6 +44,6 @@ ext {
     multidex = '2.0.1'
     roomVersion = '2.2.0-alpha01'
     vectordrawable = '1.0.1'
-    workManager = '2.0.0'
+    workManager = '2.4.0'
 
 }
