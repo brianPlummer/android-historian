@@ -145,13 +145,14 @@ class UserViewModel(private val repository: UserRepository,
 
 class UserViewModelProvider(private val application: Application ) : ViewModelProvider.Factory {
 
-    private val parentJob: Job = Job()
-    private val couroutineContext = parentJob + Dispatchers.Main
-    private val scope: CoroutineScope = CoroutineScope(couroutineContext)
-    private val userInfoDao = InfoDatabase.getDatabase(application, scope).userDao()
-    private val repository = UserRepository(userInfoDao)
-
     override fun <T : ViewModel?> create(modelClass: Class<T>): T {
+
+        val parentJob: Job = Job()
+        val couroutineContext = parentJob + Dispatchers.Main
+        val scope: CoroutineScope = CoroutineScope(couroutineContext)
+        val userInfoDao = InfoDatabase.getDatabase(application, scope).userDao()
+        val repository = UserRepository(userInfoDao)
+
         return UserViewModel(repository, scope, parentJob) as T
     }
 }

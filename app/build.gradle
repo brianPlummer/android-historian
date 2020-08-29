@@ -108,6 +108,13 @@ dependencies {
 
     //Kotlin
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+
+
+    // for Android:
+    testImplementation 'org.amshove.kluent:kluent-android:1.61'
+
+    // To get JUnit errors from kotlin.test, to e.g. enable diff windows in failure messages
+    testImplementation "org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version"
 }
 
 tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
