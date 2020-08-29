@@ -64,7 +64,8 @@ class UserActivity : AppCompatActivity() {
         setContentView(R.layout.activity_user)
         mainActivity = this
 
-        userViewModel = ViewModelProviders.of(this).get(UserViewModel::class.java)
+        val userViewModelProvider: UserViewModelProvider = UserViewModelProvider(application)
+        userViewModel = ViewModelProviders.of(this, userViewModelProvider).get(UserViewModel::class.java)
 
         userViewModel.allUserEntity.observe(this, Observer { userInfo ->
             users = userInfo

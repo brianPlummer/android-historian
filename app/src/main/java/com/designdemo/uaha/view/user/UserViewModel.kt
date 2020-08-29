@@ -9,9 +9,7 @@ import androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_AUTO_BATTERY
 import androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
 import androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES
 import androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO
-import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.*
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
@@ -146,5 +144,11 @@ class UserViewModel(application: Application) : AndroidViewModel(application) {
     @Suppress("ExpressionBodySyntax")
     private fun isAndroidP(): Boolean {
         return Build.VERSION.SDK_INT in Int.MIN_VALUE..Build.VERSION_CODES.P
+    }
+}
+
+class UserViewModelProvider(private val application: Application ) : ViewModelProvider.Factory {
+    override fun <T : ViewModel?> create(modelClass: Class<T>): T {
+        return UserViewModel(application) as T
     }
 }
