@@ -5,23 +5,17 @@ import android.app.Application
 import android.content.Context
 import android.os.Build
 import androidx.appcompat.app.AppCompatDelegate
-import androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_AUTO_BATTERY
-import androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
-import androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES
-import androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO
-import androidx.lifecycle.*
-import androidx.work.PeriodicWorkRequestBuilder
-import androidx.work.WorkInfo
-import androidx.work.WorkManager
+import androidx.appcompat.app.AppCompatDelegate.*
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.work.*
 import com.designdemo.uaha.data.InfoDatabase
+import com.designdemo.uaha.data.model.user.CoroutinesUserRepository
 import com.designdemo.uaha.data.model.user.UserEntity
 import com.designdemo.uaha.data.model.user.UserRepository
-import com.designdemo.uaha.util.TAG_WORK_NOTIF
-import com.designdemo.uaha.util.NAME_MIN
-import com.designdemo.uaha.util.NAME_MAX
-import com.designdemo.uaha.util.PHONE_LENGTH
-import com.designdemo.uaha.util.PASSWORD_MIN
-import com.designdemo.uaha.util.PREF_DARK_MODE
+import com.designdemo.uaha.util.*
 import com.designdemo.uaha.workers.NotifWorker
 import com.support.android.designlibdemo.R
 import kotlinx.coroutines.CoroutineScope
@@ -32,21 +26,19 @@ import java.util.concurrent.TimeUnit
 
 class UserViewModel(private val repository: UserRepository,
                     private val scope: CoroutineScope,
-                    private val parentJob: Job) : ViewModel() {
+                    private val parentJob: Job,
+                    private val workManager: WorkManaagerHistorian) : ViewModel() {
 
     companion object {
         private const val TAG = "UserViewModel"
     }
 
-
     val allUserEntity: LiveData<List<UserEntity>>
 
     internal val outputWorkInfos: LiveData<List<WorkInfo>>
 
-    private val workManager: WorkManager = WorkManager.getInstance()
-
     init {
-        allUserEntity = repository.allUserEntity
+        allUserEntity = repository.fetchUserInfo()
         outputWorkInfos = workManager.getWorkInfosByTagLiveData(TAG_WORK_NOTIF)
     }
 
@@ -143,7 +135,7 @@ class UserViewModel(private val repository: UserRepository,
     }
 }
 
-class UserViewModelProvider(private val application: Application ) : ViewModelProvider.Factory {
+class UserViewModelProvider(private val application: Application) : ViewModelProvider.Factory {
 
     override fun <T : ViewModel?> create(modelClass: Class<T>): T {
 
@@ -151,8 +143,24 @@ class UserViewModelProvider(private val application: Application ) : ViewModelPr
         val couroutineContext = parentJob + Dispatchers.Main
         val scope: CoroutineScope = CoroutineScope(couroutineContext)
         val userInfoDao = InfoDatabase.getDatabase(application, scope).userDao()
-        val repository = UserRepository(userInfoDao)
+        val repository: UserRepository = CoroutinesUserRepository(userInfoDao)
 
-        return UserViewModel(repository, scope, parentJob) as T
+        return UserViewModel(repository, scope, parentJob, WorkManagerAndroidX()) as T
     }
+}
+
+
+interface WorkManaagerHistorian {
+    fun enqueue(workRequest: WorkRequest): Operation?
+    fun cancelAllWorkByTag(tag: String): Operation
+    fun getWorkInfosByTagLiveData(tag: String): LiveData<List<WorkInfo>>
+}
+
+class WorkManagerAndroidX(private val workManager: WorkManager = WorkManager.getInstance()) : WorkManaagerHistorian {
+
+    override fun enqueue(workRequest: WorkRequest) = workManager.enqueue(workRequest)
+
+    override fun cancelAllWorkByTag(tag: String) = workManager.cancelAllWorkByTag(tag)
+
+    override fun getWorkInfosByTagLiveData(tag: String) = workManager.getWorkInfosByTagLiveData(tag)
 }
